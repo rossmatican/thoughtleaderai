@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { analyzeKeystrokeDynamics, detectAIPatterns } from '../utils/analysisEngine'
 
-const WritingInterface = ({ writingData, updateWritingData, currentPhase, setCurrentPhase }) => {
+const WritingInterface = ({ writingData, updateWritingData, currentPhase, setCurrentPhase, onTextChange, sessionId }) => {
   const [localContent, setLocalContent] = useState('')
   const textAreaRef = useRef(null)
   const lastKeystrokeTime = useRef(Date.now())
@@ -38,11 +38,16 @@ const WritingInterface = ({ writingData, updateWritingData, currentPhase, setCur
     const newContent = e.target.value
     setLocalContent(newContent)
     
-    // Real-time AI pattern detection
+    // Real-time AI pattern detection (local)
     if (newContent.length > 50) { // Only analyze after some content
       const aiScore = detectAIPatterns(newContent)
       const cognitiveScore = Math.max(10, 100 - aiScore)
       updateWritingData({ cognitiveScore })
+    }
+    
+    // Call external analysis if provided (for Live mode)
+    if (onTextChange && newContent.length > 100) {
+      onTextChange(newContent)
     }
   }
 

@@ -6,6 +6,7 @@ import SessionDashboard from './components/SessionDashboard'
 import Chat from './components/Chat'
 import SocraticModal from './components/SocraticModal'
 import './App.css'
+// Note: types.ts is now at workspace root for shared access
 
 function App() {
   // App mode state
@@ -39,7 +40,7 @@ function App() {
     if (mode !== 'live' || !text.trim()) return
 
     try {
-      const response = await fetch('http://localhost:3001/api/analyse', {
+      const response = await fetch('http://localhost:3001/api/analyze', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

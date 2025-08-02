@@ -1,11 +1,11 @@
 // API Contracts for Dual-Mode Application
 
-export interface AnalyseRequest {
+export interface AnalyzeRequest {
   text: string;
   sessionId: string;
 }
 
-export interface AnalyseResponse {
+export interface AnalyzeResponse {
   score: number;
   breakdown: {
     clarity: number;
@@ -48,6 +48,6 @@ export interface ChatMessage {
 export interface AnalysisResult {
   id: string;
   timestamp: number;
-  request: AnalyseRequest;
-  response: AnalyseResponse;
+  request: AnalyzeRequest;
+  response: AnalyzeResponse;
 }

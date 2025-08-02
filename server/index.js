@@ -23,8 +23,8 @@ function getSession(sessionId) {
   return sessions.get(sessionId);
 }
 
-// Analyse endpoint - for Live mode
-app.post('/api/analyse', (req, res) => {
+// Analyze endpoint - for Live mode
+app.post('/api/analyze', (req, res) => {
   const { text, sessionId } = req.body;
   
   if (!text || !sessionId) {

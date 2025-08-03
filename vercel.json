@@ -1,17 +1,6 @@
 {
-  "builds": [
-    {
-      "src": "app/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/app/dist/$1"
-    }
-  ]
+  "buildCommand": "cd app && npm install && npm run build",
+  "outputDirectory": "app/dist",
+  "installCommand": "npm install",
+  "framework": "vite"
 }

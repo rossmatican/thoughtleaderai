@@ -1,5 +1,17 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "app/dist",
-  "installCommand": "npm install"
+  "builds": [
+    {
+      "src": "app/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/app/dist/$1"
+    }
+  ]
 }

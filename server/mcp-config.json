@@ -1,0 +1,85 @@
+{
+  "name": "thought-leader-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for Thought Leader AI - Claude integration",
+  "endpoints": {
+    "chat": {
+      "path": "/api/chat",
+      "method": "POST",
+      "description": "Main chat endpoint for paper assistance",
+      "parameters": {
+        "message": "string",
+        "sessionId": "string",
+        "mode": "string (optional: 'paper' | 'general')"
+      }
+    },
+    "realtime-feedback": {
+      "path": "/api/realtime-feedback",
+      "method": "POST",
+      "description": "Real-time writing feedback as user types",
+      "parameters": {
+        "text": "string",
+        "sessionId": "string"
+      }
+    },
+    "socratic-guidance": {
+      "path": "/api/socratic-guidance",
+      "method": "POST",
+      "description": "Get Socratic questions to improve thinking",
+      "parameters": {
+        "text": "string",
+        "sessionId": "string",
+        "context": "object (optional)"
+      }
+    },
+    "writing-samples": {
+      "path": "/api/writing-samples/:sessionId",
+      "method": "GET",
+      "description": "Retrieve writing samples for a session"
+    },
+    "writing-trends": {
+      "path": "/api/writing-trends/:sessionId",
+      "method": "GET",
+      "description": "Analyze writing trends over time"
+    },
+    "export": {
+      "path": "/api/export/:sessionId",
+      "method": "GET",
+      "description": "Export session data",
+      "parameters": {
+        "format": "string (query param: 'json' | 'text')"
+      }
+    }
+  },
+  "capabilities": {
+    "realtime": true,
+    "chat": true,
+    "analysis": true,
+    "storage": true
+  },
+  "configuration": {
+    "apiKey": {
+      "required": true,
+      "env": "CLAUDE_API_KEY",
+      "description": "Anthropic Claude API key"
+    },
+    "model": {
+      "required": false,
+      "env": "CLAUDE_MODEL",
+      "default": "claude-3-5-sonnet-20241022",
+      "description": "Claude model to use"
+    },
+    "feedbackInterval": {
+      "required": false,
+      "env": "FEEDBACK_INTERVAL_MS",
+      "default": 5000,
+      "description": "Interval for real-time feedback in milliseconds"
+    },
+    "minTextLength": {
+      "required": false,
+      "env": "MIN_TEXT_LENGTH_FOR_FEEDBACK",
+      "default": 50,
+      "description": "Minimum text length before providing feedback"
+    }
+  }
+}

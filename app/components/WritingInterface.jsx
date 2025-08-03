@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { analyzeKeystrokeDynamics, detectAIPatterns } from '../utils/analysisEngine'
 import { API_ENDPOINTS } from '../config'
+import { useRealtimeFeedback } from '../hooks/useRealtimeFeedback'
+import RealtimeFeedback from './RealtimeFeedback'
 
 const WritingInterface = ({ writingData, updateWritingData, currentPhase, setCurrentPhase, onTextChange, sessionId }) => {
   const [localContent, setLocalContent] = useState('')
@@ -8,6 +10,18 @@ const WritingInterface = ({ writingData, updateWritingData, currentPhase, setCur
   const textAreaRef = useRef(null)
   const lastKeystrokeTime = useRef(Date.now())
   const keystrokeBuffer = useRef([])
+  
+  // Real-time Claude feedback hook
+  const {
+    feedback,
+    isLoading: isFeedbackLoading,
+    error: feedbackError,
+    cognitiveScore: claudeCognitiveScore,
+    aiPatterns,
+    suggestions,
+    analyzeFeedback,
+    getSocraticGuidance
+  } = useRealtimeFeedback(sessionId, currentPhase === 'live')
 
   useEffect(() => {
     // Update parent state when local content changes
@@ -45,6 +59,11 @@ const WritingInterface = ({ writingData, updateWritingData, currentPhase, setCur
       const aiScore = detectAIPatterns(newContent)
       const cognitiveScore = Math.max(10, 100 - aiScore)
       updateWritingData({ cognitiveScore })
+    }
+    
+    // Trigger Claude real-time feedback in Live mode
+    if (currentPhase === 'live' && newContent.length > 50) {
+      analyzeFeedback(newContent)
     }
     
     // Call external analysis if provided (for Live mode)
@@ -145,6 +164,16 @@ const WritingInterface = ({ writingData, updateWritingData, currentPhase, setCur
             </button>
           </div>
         )
+      case 'live':
+        return (
+          <div className="phase-instructions live">
+            <h3>🔴 Live Mode - Real-time Claude Feedback</h3>
+            <p>Claude is watching your writing and providing real-time feedback to help improve your work.</p>
+            <button onClick={finishSession} className="phase-button secondary">
+              Finish Session
+            </button>
+          </div>
+        )
       case 'review':
         return (
           <div className="phase-instructions review">
@@ -169,6 +198,20 @@ const WritingInterface = ({ writingData, updateWritingData, currentPhase, setCur
           className={`main-editor ${currentPhase}`}
           disabled={currentPhase === 'review'}
         />
+        
+        {/* Real-time Claude Feedback Panel */}
+        {currentPhase === 'live' && (
+          <div className="feedback-panel">
+            <RealtimeFeedback
+              feedback={feedback}
+              isLoading={isFeedbackLoading}
+              error={feedbackError}
+              cognitiveScore={claudeCognitiveScore}
+              aiPatterns={aiPatterns}
+              suggestions={suggestions}
+            />
+          </div>
+        )}
       </div>
       
       <div className="writing-stats">
@@ -177,6 +220,9 @@ const WritingInterface = ({ writingData, updateWritingData, currentPhase, setCur
         <span>Phase: {currentPhase}</span>
         {writingData.voiceProfileInitialized && (
           <span className="voice-status">🎤 Voice Profile: Active</span>
+        )}
+        {currentPhase === 'live' && claudeCognitiveScore !== null && (
+          <span className="claude-score">🤖 Claude Score: {claudeCognitiveScore}%</span>
         )}
       </div>
     </div>

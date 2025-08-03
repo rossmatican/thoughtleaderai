@@ -120,7 +120,7 @@ function App() {
               <WritingInterface 
                 writingData={writingData}
                 updateWritingData={updateWritingData}
-                currentPhase={currentPhase}
+                currentPhase={mode === 'live' ? 'live' : currentPhase}
                 setCurrentPhase={setCurrentPhase}
                 onTextChange={handleAnalysis}
                 sessionId={sessionId}

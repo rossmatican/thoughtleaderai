@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { generateSocraticPrompt } from '../utils/analysisEngine'
 
 const CognitiveMonitor = ({ writingData, updateWritingData, analysis }) => {
@@ -7,23 +7,7 @@ const CognitiveMonitor = ({ writingData, updateWritingData, analysis }) => {
   const [lastInterventionScore, setLastInterventionScore] = useState(100)
   const [showPrompt, setShowPrompt] = useState(false)
 
-  useEffect(() => {
-    // Trigger intervention when cognitive score drops significantly
-    const scoreDropThreshold = 15
-    const timeSinceLastIntervention = Date.now() - (promptHistory[promptHistory.length - 1]?.timestamp || 0)
-    const minTimeBetweenPrompts = 30000 // 30 seconds
-
-    if (
-      writingData.cognitiveScore < 50 && // Score is concerning
-      writingData.cognitiveScore < lastInterventionScore - scoreDropThreshold && // Significant drop
-      timeSinceLastIntervention > minTimeBetweenPrompts && // Not too frequent
-      writingData.content.length > 100 // Enough content to analyze
-    ) {
-      triggerIntervention()
-    }
-  }, [writingData.cognitiveScore, writingData.content, lastInterventionScore, promptHistory])
-
-  const triggerIntervention = () => {
+  const triggerIntervention = useCallback(() => {
     const prompt = generateSocraticPrompt(writingData.content, writingData.cognitiveScore)
     const intervention = {
       id: Date.now(),
@@ -43,7 +27,23 @@ const CognitiveMonitor = ({ writingData, updateWritingData, analysis }) => {
     updateWritingData({ interventions: newInterventions })
     
     setPromptHistory(prev => [...prev, intervention])
-  }
+  }, [writingData, updateWritingData])
+
+  useEffect(() => {
+    // Trigger intervention when cognitive score drops significantly
+    const scoreDropThreshold = 15
+    const timeSinceLastIntervention = Date.now() - (promptHistory[promptHistory.length - 1]?.timestamp || 0)
+    const minTimeBetweenPrompts = 30000 // 30 seconds
+
+    if (
+      writingData.cognitiveScore < 50 && // Score is concerning
+      writingData.cognitiveScore < lastInterventionScore - scoreDropThreshold && // Significant drop
+      timeSinceLastIntervention > minTimeBetweenPrompts && // Not too frequent
+      writingData.content.length > 100 // Enough content to analyze
+    ) {
+      triggerIntervention()
+    }
+  }, [writingData.cognitiveScore, writingData.content, lastInterventionScore, promptHistory, triggerIntervention])
 
   const dismissPrompt = () => {
     setShowPrompt(false)

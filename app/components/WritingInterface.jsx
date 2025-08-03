@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { analyzeKeystrokeDynamics, detectAIPatterns } from '../utils/analysisEngine'
+import { API_ENDPOINTS } from '../config'
 
 const WritingInterface = ({ writingData, updateWritingData, currentPhase, setCurrentPhase, onTextChange, sessionId }) => {
   const [localContent, setLocalContent] = useState('')
@@ -55,7 +56,7 @@ const WritingInterface = ({ writingData, updateWritingData, currentPhase, setCur
   const initializeVoiceProfile = async (sampleText) => {
     try {
       setIsInitializingVoice(true)
-      const response = await fetch('http://localhost:3001/api/voice/initialize', {
+              const response = await fetch(API_ENDPOINTS.voiceInitialize, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -66,6 +67,9 @@ const WritingInterface = ({ writingData, updateWritingData, currentPhase, setCur
         }),
       })
 
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
+      }
       const result = await response.json()
       if (result.success) {
         console.log('Voice profile initialized:', result.profile)

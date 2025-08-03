@@ -1,5 +1,10 @@
 import express from 'express';
 import cors from 'cors';
+import dotenv from 'dotenv';
+import claudeService from './services/claude.js';
+import writingSamplesService from './services/writingSamples.js';
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -192,9 +197,9 @@ app.post('/api/analyze', (req, res) => {
   res.json(response);
 });
 
-// Chat endpoint - for Draft mode
-app.post('/api/chat', (req, res) => {
-  const { message, sessionId } = req.body;
+// Chat endpoint - for Draft mode with Claude integration
+app.post('/api/chat', async (req, res) => {
+  const { message, sessionId, mode = 'paper' } = req.body;
   
   if (!message || !sessionId) {
     return res.status(400).json({ error: 'Missing message or sessionId' });
@@ -210,28 +215,41 @@ app.post('/api/chat', (req, res) => {
     sender: 'user'
   });
 
-  // Simple AI response logic (replace with actual Claude integration)
-  let reply = "I understand you're working on that idea. ";
-  
-  if (message.toLowerCase().includes('help')) {
-    reply += "What specific aspect would you like to explore further?";
-  } else if (message.toLowerCase().includes('stuck')) {
-    reply += "Let's break this down into smaller pieces. What's the main point you're trying to make?";
-  } else if (message.toLowerCase().includes('draft')) {
-    reply += "Great! What's your opening thought?";
-  } else {
-    reply += "That's an interesting perspective. How does it connect to your broader argument?";
+  try {
+    // Get conversation history for context
+    const conversationHistory = session.messages.slice(-10).map(msg => ({
+      role: msg.sender === 'user' ? 'user' : 'assistant',
+      content: msg.content
+    }));
+
+    // Send to Claude with conversation context
+    const reply = await claudeService.sendMessage(conversationHistory);
+
+    // Add assistant response to session
+    session.messages.push({
+      id: (Date.now() + 1).toString(),
+      content: reply,
+      timestamp: Date.now(),
+      sender: 'assistant'
+    });
+
+    // Save writing sample if enabled
+    if (mode === 'paper') {
+      await writingSamplesService.saveSample(sessionId, {
+        text: message,
+        analysisType: 'paper',
+        feedback: reply
+      });
+    }
+
+    res.json({ reply });
+  } catch (error) {
+    console.error('Chat error:', error);
+    res.status(500).json({ 
+      error: 'Failed to get response from Claude',
+      reply: 'I apologize, but I encountered an error. Please check your API configuration and try again.'
+    });
   }
-
-  // Add assistant response to session
-  session.messages.push({
-    id: (Date.now() + 1).toString(),
-    content: reply,
-    timestamp: Date.now(),
-    sender: 'assistant'
-  });
-
-  res.json({ reply });
 });
 
 // Session info endpoint
@@ -241,6 +259,137 @@ app.get('/api/session/:sessionId', (req, res) => {
   res.json(session);
 });
 
+// Real-time feedback endpoint
+app.post('/api/realtime-feedback', async (req, res) => {
+  const { text, sessionId } = req.body;
+  
+  if (!text || !sessionId) {
+    return res.status(400).json({ error: 'Missing text or sessionId' });
+  }
+
+  // Check minimum text length
+  const minLength = parseInt(process.env.MIN_TEXT_LENGTH_FOR_FEEDBACK) || 50;
+  if (text.length < minLength) {
+    return res.json({ 
+      feedback: null, 
+      message: 'Keep writing...' 
+    });
+  }
+
+  try {
+    const session = getSession(sessionId);
+    
+    // Get real-time feedback from Claude
+    const feedback = await claudeService.analyzeWriting(text, 'realtime');
+    
+    // Detect AI patterns
+    const aiPatterns = await claudeService.detectAIPatterns(text);
+    
+    // Calculate cognitive score based on AI patterns
+    const cognitiveScore = 100 - (aiPatterns.aiScore || 0);
+    
+    // Save the writing sample with analysis
+    await writingSamplesService.saveSample(sessionId, {
+      text,
+      analysisType: 'realtime',
+      cognitiveScore,
+      aiPatterns,
+      feedback
+    });
+    
+    // Add to session analyses
+    session.analyses.push({
+      timestamp: Date.now(),
+      cognitiveScore,
+      aiPatterns,
+      feedback
+    });
+
+    res.json({
+      feedback,
+      cognitiveScore,
+      aiPatterns: aiPatterns.patterns || [],
+      suggestions: aiPatterns.suggestions || []
+    });
+  } catch (error) {
+    console.error('Real-time feedback error:', error);
+    res.status(500).json({ 
+      error: 'Failed to analyze text',
+      feedback: null
+    });
+  }
+});
+
+// Socratic guidance endpoint
+app.post('/api/socratic-guidance', async (req, res) => {
+  const { text, sessionId, context = {} } = req.body;
+  
+  if (!text || !sessionId) {
+    return res.status(400).json({ error: 'Missing text or sessionId' });
+  }
+
+  try {
+    const questions = await claudeService.provideSocraticGuidance(text, context);
+    
+    res.json({ questions });
+  } catch (error) {
+    console.error('Socratic guidance error:', error);
+    res.status(500).json({ 
+      error: 'Failed to generate questions',
+      questions: null
+    });
+  }
+});
+
+// Writing samples endpoints
+app.get('/api/writing-samples/:sessionId', async (req, res) => {
+  const { sessionId } = req.params;
+  
+  try {
+    const samples = await writingSamplesService.getSamplesBySession(sessionId);
+    res.json({ samples });
+  } catch (error) {
+    console.error('Error fetching samples:', error);
+    res.status(500).json({ error: 'Failed to fetch writing samples' });
+  }
+});
+
+app.get('/api/writing-trends/:sessionId', async (req, res) => {
+  const { sessionId } = req.params;
+  
+  try {
+    const trends = await writingSamplesService.analyzeTrends(sessionId);
+    res.json(trends);
+  } catch (error) {
+    console.error('Error analyzing trends:', error);
+    res.status(500).json({ error: 'Failed to analyze trends' });
+  }
+});
+
+// Export session data
+app.get('/api/export/:sessionId', async (req, res) => {
+  const { sessionId } = req.params;
+  const { format = 'json' } = req.query;
+  
+  try {
+    const data = await writingSamplesService.exportSession(sessionId, format);
+    
+    if (format === 'text') {
+      res.setHeader('Content-Type', 'text/plain');
+      res.setHeader('Content-Disposition', `attachment; filename="session_${sessionId}.txt"`);
+    } else {
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename="session_${sessionId}.json"`);
+    }
+    
+    res.send(data);
+  } catch (error) {
+    console.error('Error exporting session:', error);
+    res.status(500).json({ error: 'Failed to export session' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`Claude API Key: ${process.env.CLAUDE_API_KEY ? 'Configured' : 'NOT CONFIGURED - Please set CLAUDE_API_KEY in .env file'}`);
 });

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "cd app && vite",
-    "build": "cd app && vite build",
+    "build": "cd app && npm install && npm run build",
     "lint": "cd app && eslint .",
     "preview": "cd app && vite preview",
     "server": "cd server && npm start",

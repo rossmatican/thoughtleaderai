@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import WritingInterface from './components/WritingInterface'
 import CognitiveMonitor from './components/CognitiveMonitor'
 import DependencyMeter from './components/DependencyMeter'
 import SessionDashboard from './components/SessionDashboard'
 import Chat from './components/Chat'
 import SocraticModal from './components/SocraticModal'
+import { API_ENDPOINTS } from './config'
 import './App.css'
 // Note: types.ts is now at workspace root for shared access
 
@@ -40,7 +41,7 @@ function App() {
     if (mode !== 'live' || !text.trim()) return
 
     try {
-      const response = await fetch('http://localhost:3001/api/analyze', {
+      const response = await fetch(API_ENDPOINTS.analyze, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

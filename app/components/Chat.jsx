@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { API_ENDPOINTS } from '../config';
 
 const Chat = ({ sessionId }) => {
   const [messages, setMessages] = useState([]);
@@ -29,7 +30,7 @@ const Chat = ({ sessionId }) => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:3001/api/chat', {
+              const response = await fetch(API_ENDPOINTS.chat, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

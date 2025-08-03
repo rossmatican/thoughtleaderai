@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { generateSocraticPrompt } from '../utils/analysisEngine'
 
 const CognitiveMonitor = ({ writingData, updateWritingData, analysis }) => {
@@ -21,7 +21,7 @@ const CognitiveMonitor = ({ writingData, updateWritingData, analysis }) => {
     ) {
       triggerIntervention()
     }
-  }, [writingData.cognitiveScore, writingData.content, lastInterventionScore, promptHistory])
+  }, [writingData.cognitiveScore, writingData.content, lastInterventionScore, promptHistory, triggerIntervention])
 
   const triggerIntervention = () => {
     const prompt = generateSocraticPrompt(writingData.content, writingData.cognitiveScore)

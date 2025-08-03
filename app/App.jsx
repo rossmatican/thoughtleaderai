@@ -52,6 +52,9 @@ function App() {
         }),
       })
 
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
+      }
       const analysis = await response.json()
       setCurrentAnalysis(analysis)
       

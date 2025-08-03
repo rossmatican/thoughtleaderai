@@ -67,6 +67,9 @@ const WritingInterface = ({ writingData, updateWritingData, currentPhase, setCur
         }),
       })
 
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
+      }
       const result = await response.json()
       if (result.success) {
         console.log('Voice profile initialized:', result.profile)

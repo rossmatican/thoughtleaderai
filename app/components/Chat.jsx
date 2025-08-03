@@ -41,6 +41,9 @@ const Chat = ({ sessionId }) => {
         }),
       });
 
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
       const data = await response.json();
       
       const assistantMessage = {

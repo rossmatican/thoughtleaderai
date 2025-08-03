@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { generateSocraticPrompt } from '../utils/analysisEngine'
 
-const CognitiveMonitor = ({ writingData, updateWritingData }) => {
+const CognitiveMonitor = ({ writingData, updateWritingData, analysis }) => {
   const [currentPrompt, setCurrentPrompt] = useState(null)
   const [promptHistory, setPromptHistory] = useState([])
   const [lastInterventionScore, setLastInterventionScore] = useState(100)
@@ -121,6 +121,14 @@ const CognitiveMonitor = ({ writingData, updateWritingData }) => {
       {/* AI Pattern Alerts */}
       <div className="pattern-alerts">
         <h4>Pattern Detection</h4>
+        
+        {/* Voice Drift Alert */}
+        {analysis?.voiceDrift > 0.3 && (
+          <div className="alert voice-drift">
+            ⚠️ Voice Drift ({Math.round(analysis.voiceDrift * 100)}%)
+          </div>
+        )}
+        
         {writingData.cognitiveScore < 70 && writingData.content.length > 50 ? (
           <div className="alert-list">
             {writingData.cognitiveScore < 30 && (

@@ -158,6 +158,11 @@ body {
   font-size: 0.875rem;
 }
 
+.voice-status {
+  color: #8b5cf6 !important;
+  font-weight: 600;
+}
+
 /* Monitoring Section */
 .monitoring-section {
   display: flex;
@@ -330,6 +335,7 @@ body {
 .alert.caution { background: #fef3c7; border-left: 3px solid #f59e0b; }
 .alert.warning { background: #fee2e2; border-left: 3px solid #f97316; }
 .alert.critical { background: #fecaca; border-left: 3px solid #ef4444; }
+.alert.voice-drift { background: #e0e7ff; border-left: 3px solid #8b5cf6; color: #6d28d9; }
 
 .dynamics-stats {
   display: flex;

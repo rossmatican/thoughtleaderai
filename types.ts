@@ -14,6 +14,7 @@ export interface AnalyzeResponse {
     coherence: number;
     patterns: string[];
   };
+  voiceDrift?: number; // 0.0-1.0 indicating deviation from baseline voice
   question?: string;
 }
 
@@ -26,6 +27,29 @@ export interface ChatResponse {
   reply: string;
 }
 
+// Voice Profile Types
+export interface VoiceProfile {
+  sessionId: string;
+  sampleText: string;
+  timestamp: number;
+  characteristics?: {
+    avgSentenceLength: number;
+    vocabularyComplexity: number;
+    punctuationPattern: string[];
+    commonPhrases: string[];
+  };
+}
+
+export interface VoiceInitializeRequest {
+  sessionId: string;
+  sampleText: string;
+}
+
+export interface VoiceInitializeResponse {
+  success: boolean;
+  profile: VoiceProfile;
+}
+
 // UI State Types
 export interface AppMode {
   current: 'draft' | 'live';
@@ -36,6 +60,7 @@ export interface SessionData {
   startTime: number;
   messages: ChatMessage[];
   analyses: AnalysisResult[];
+  voiceProfile?: VoiceProfile;
 }
 
 export interface ChatMessage {
